@@ -17,6 +17,7 @@ type ITaskController interface {
 	UpdateTask(c echo.Context) error
 	DeleteTask(c echo.Context) error
 }
+
 type taskController struct {
 	tu usecase.ITaskUsecase
 }
@@ -26,10 +27,14 @@ func NewTaskController(tu usecase.ITaskUsecase) ITaskController {
 }
 
 func (tc *taskController) GetAllTasks(c echo.Context) error {
+	// JWTトークンからユーザー情報を取得
 	user := c.Get("user").(*jwt.Token)
+	// トークンのClaims（情報）を取得
 	claims := user.Claims.(jwt.MapClaims)
+	// user_idを取得してuint型に変換
 	userId := uint(claims["user_id"].(float64))
 
+	// UseCase層でタスク一覧を取得
 	taskRes, err := tc.tu.GetAllTasks(userId)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -38,11 +43,16 @@ func (tc *taskController) GetAllTasks(c echo.Context) error {
 }
 
 func (tc *taskController) GetTaskById(c echo.Context) error {
+	// JWTトークンからユーザー情報を取得
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 	userId := uint(claims["user_id"].(float64))
+
+	// URLパラメータからタスクIDを取得
 	id := c.Param("taskId")
 	taskid, _ := strconv.Atoi(id)
+
+	// UseCase層で特定のタスクを取得
 	taskRes, err := tc.tu.GetTaskById(userId, uint(taskid))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -51,16 +61,21 @@ func (tc *taskController) GetTaskById(c echo.Context) error {
 }
 
 func (tc *taskController) CreateTask(c echo.Context) error {
+	// JWTトークンからユーザー情報を取得
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
-	userId := uint(claims["user_id"].(float64))
-	
+	user_id := claims["user_id"]
+
+	// リクエストボディからタスク情報を取得
 	task := model.Task{}
 	if err := c.Bind(&task); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	task.UserID = userId
-	
+
+	// タスクにユーザーIDを設定
+	task.UserID = uint(user_id.(float64))
+
+	// UseCase層でタスクを作成
 	taskRes, err := tc.tu.CreateTask(task)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -69,18 +84,23 @@ func (tc *taskController) CreateTask(c echo.Context) error {
 }
 
 func (tc *taskController) UpdateTask(c echo.Context) error {
+	// JWTトークンからユーザー情報を取得
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
-	userId := uint(claims["user_id"].(float64))
+	user_id := claims["user_id"]
+
+	// URLパラメータからタスクIDを取得
 	id := c.Param("taskId")
-	taskid, _ := strconv.Atoi(id)
-	
+	taskId, _ := strconv.Atoi(id)
+
+	// リクエストボディからタスク情報を取得
 	task := model.Task{}
 	if err := c.Bind(&task); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	
-	taskRes, err := tc.tu.UpdateTask(task, userId, uint(taskid))
+
+	// UseCase層でタスクを更新
+	taskRes, err := tc.tu.UpdateTask(task, uint(user_id.(float64)), uint(taskId))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -88,13 +108,17 @@ func (tc *taskController) UpdateTask(c echo.Context) error {
 }
 
 func (tc *taskController) DeleteTask(c echo.Context) error {
+	// JWTトークンからユーザー情報を取得
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
-	userId := uint(claims["user_id"].(float64))
+	user_id := claims["user_id"]
+
+	// URLパラメータからタスクIDを取得
 	id := c.Param("taskId")
-	taskid, _ := strconv.Atoi(id)
-	
-	if err := tc.tu.DeleteTask(userId, uint(taskid)); err != nil {
+	taskId, _ := strconv.Atoi(id)
+
+	// UseCase層でタスクを削除
+	if err := tc.tu.DeleteTask(uint(user_id.(float64)), uint(taskId)); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusOK)
