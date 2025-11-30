@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"errors"
 	"go-rest-api/model"
 	"go-rest-api/repository"
 	"go-rest-api/validator"
@@ -49,6 +50,10 @@ func (uu *userUsecase) Login(user model.User) (string, error) {
 	storeUser := model.User{}
 	if err := uu.ur.GetUserByEmail(&storeUser, user.Email); err != nil {
 		return "", err
+	}
+	// パスワードの検証
+	if err := bcrypt.CompareHashAndPassword([]byte(storeUser.Password), []byte(user.Password)); err != nil {
+		return "", errors.New("invalid email or password")
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": storeUser.ID,
