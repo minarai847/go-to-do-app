@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/labstack/echo/v4"
 )
 
@@ -31,7 +32,15 @@ func (uc *userController) SignUp(c echo.Context) error {
 	}
 	userRes, err := uc.uu.SignUp(user)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		// バリデーションエラーの場合はBadRequestを返す
+		// validation.Errorsはerrorインターフェースを実装しているので、型アサーションで確認
+		if validationErrors, ok := err.(validation.Errors); ok {
+			return c.JSON(http.StatusBadRequest, validationErrors)
+		}
+		// エラーメッセージに"validation"が含まれている場合もバリデーションエラーとして扱う
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": err.Error(),
+		})
 	}
 	return c.JSON(http.StatusCreated, userRes)
 }
@@ -39,11 +48,21 @@ func (uc *userController) SignUp(c echo.Context) error {
 func (uc *userController) Login(c echo.Context) error {
 	user := model.User{}
 	if err := c.Bind(&user); err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": err.Error(),
+		})
 	}
 	tokenString, err := uc.uu.Login(user)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		// バリデーションエラーの場合はBadRequestを返す
+		// validation.Errorsはerrorインターフェースを実装しているので、型アサーションで確認
+		if validationErrors, ok := err.(validation.Errors); ok {
+			return c.JSON(http.StatusBadRequest, validationErrors)
+		}
+		// エラーメッセージに"validation"が含まれている場合もバリデーションエラーとして扱う
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": err.Error(),
+		})
 	}
 	cookie := new(http.Cookie)
 	cookie.Name = "token"
