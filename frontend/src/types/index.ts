@@ -31,3 +31,8 @@ export interface ApiError {
     message?: string;
 }
 
+// CSRFトークンの型定義
+export interface CsrfToken {
+    csrf_token: string;
+}
+

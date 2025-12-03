@@ -18,19 +18,25 @@ func NewRouter(uc controller.IUserController, tc controller.ITaskController) *ec
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
 		AllowCredentials: true,
 	}))
-	// 認証前のエンドポイント（signup, login）はCSRF保護の対象外
-	e.POST("/signup", uc.SignUp)
-	e.POST("/login", uc.Login)
-	// CSRFミドルウェアを適用（認証後のエンドポイント用）
-	auth := e.Group("")
-	auth.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+	// CSRFミドルウェアを全体に適用（GETリクエストは自動的に許可される）
+	// signupとloginはCSRF保護の対象外
+	e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
 		CookiePath:     "/",
 		CookieDomain:   os.Getenv("API_DOMAIN"),
 		CookieHTTPOnly: true,
 		CookieSameSite: http.SameSiteNoneMode,
+		Skipper: func(c echo.Context) bool {
+			// signupとloginはCSRF保護の対象外
+			return c.Path() == "/signup" || c.Path() == "/login"
+		},
 	}))
+	// 認証前のエンドポイント（signup, login, csrf）はCSRF保護の対象外（GETは自動的に許可される）
+	e.POST("/signup", uc.SignUp)
+	e.POST("/login", uc.Login)
+	e.GET("/csrf", uc.GetCSRFToken)
+	// 認証後のエンドポイント
+	auth := e.Group("")
 	auth.POST("/logout", uc.LogOut)
-	auth.GET("/csrf", uc.GetCSRFToken)
 	t := e.Group("/tasks")
 	t.Use(echojwt.WithConfig(echojwt.Config{
 		SigningKey:  []byte(os.Getenv("SECRET")),
