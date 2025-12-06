@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useNavigate } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { CsrfToken } from '../types';
 import useStore from '../store';
 
@@ -13,12 +13,32 @@ export const useError = () => {
     }
     const switchErrorHandling = (msg: string) => {
         switch (msg) {
-            case 'invalid csrf token';
+            case 'invalid csrf token':
                 getCsrfToken();
                 alert('CSRF token is invalid, please try again');
+                break;
+            case 'invalid or expired jwt':
+                alert(`access token expired, please login`)
+                resetEditedTask()
+                navigate('/')
+                break;
+            case 'missin or malformed jwt':
+                alert(`access token is not valid, please login`)
+                navigate('/')
+                break;
+            case 'duplicated key not allowed':
+                alert(`email already exist, please use another one`)
+                break;
+            case 'crypto/bcrypt: bcrypt match failed':
+                alert(`password is incorrect, please try again`)
+                break;
+            case 'record not found':
+                alert(`user not found, please signup`)
+                navigate('/')
                 break;
             default:
                 alert(msg)
         }
     }
+    return { switchErrorHandling }
 }
