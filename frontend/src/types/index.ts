@@ -36,3 +36,9 @@ export interface CsrfToken {
     csrf_token: string;
 }
 
+// 認証情報の型定義
+export interface Credentials {
+    email: string;
+    password: string;
+}
+
