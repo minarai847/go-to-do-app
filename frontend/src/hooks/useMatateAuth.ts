@@ -14,7 +14,8 @@ export const useMutateAuth = () => {
         mutationFn: async (user: Credentials) => {
             const response = await axios.post(
                 `${process.env.REACT_APP_API_URL}/login`,
-                user
+                user,
+                { withCredentials: true }
             );
             return response.data;
         },
@@ -36,7 +37,8 @@ export const useMutateAuth = () => {
         mutationFn: async (user: Credentials) => {
             const response = await axios.post(
                 `${process.env.REACT_APP_API_URL}/signup`,
-                user
+                user,
+                { withCredentials: true }
             );
             return response.data;
         },
@@ -57,7 +59,9 @@ export const useMutateAuth = () => {
     const logoutMutation = useMutation({
         mutationFn: async () => {
             const response = await axios.post(
-                `${process.env.REACT_APP_API_URL}/logout`
+                `${process.env.REACT_APP_API_URL}/logout`,
+                {},
+                { withCredentials: true }
             );
             return response.data;
         },

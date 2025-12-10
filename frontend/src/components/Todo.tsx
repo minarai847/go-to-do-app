@@ -1,6 +1,6 @@
 import { ArrowRightOnRectangleIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { useQueryClient } from '@tanstack/react-query';
-import { FormEvent } from 'react';
+import { FormEvent, useCallback } from 'react';
 import { useMutateAuth } from '../hooks/useMatateAuth';
 import { useQueryTasks } from '../hooks/useQueryTasks';
 import { TaskItem } from './TaskItem';
@@ -12,7 +12,7 @@ export const Todo = () => {
     const { editedTask } = useStore();
     const updateTask = useStore((state) => state.updateEditedTask);
     const { data, isLoading } = useQueryTasks();
-    const { createTaskMutation, updateTaskMutation } = useMutateTask();
+    const { createTaskMutation, updateTaskMutation, deleteTaskMutation } = useMutateTask();
     const { logoutMutation } = useMutateAuth();
 
     const submitTaskHandler = (e: FormEvent<HTMLFormElement>) => {
@@ -28,6 +28,10 @@ export const Todo = () => {
         await logoutMutation.mutateAsync();
         queryClient.removeQueries({ queryKey: ['tasks'] });
     };
+
+    const handleDelete = useCallback((id: number) => {
+        deleteTaskMutation.mutate(id);
+    }, [deleteTaskMutation]);
 
     return (
         <div className="flex justify-center items-center flex-col min-h-screen text-gray-600 font-mono">
@@ -60,9 +64,19 @@ export const Todo = () => {
             {isLoading ? (
                 <p>Loading...</p>
             ) : (
-                <ul className="my-5">
-                    {data?.map((task) => (
-                        <TaskItem key={task.id} id={task.id} title={task.title} />
+                <ul className="my-5 list-none p-0 w-full max-w-md">
+                    {data?.filter((task, index, self) =>
+                        index === self.findIndex((t) => t.id === task.id) &&
+                        task.id > 0 &&
+                        task.title &&
+                        task.title.trim() !== ''
+                    ).map((task) => (
+                        <TaskItem
+                            key={task.id}
+                            id={task.id}
+                            title={task.title}
+                            onDelete={handleDelete}
+                        />
                     ))}
                 </ul>
             )}

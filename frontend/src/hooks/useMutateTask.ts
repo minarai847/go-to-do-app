@@ -18,12 +18,9 @@ export const useMutateTask = () => {
             );
             return response.data;
         },
-        onSuccess: (data: TaskResponse) => {
-            const previousTasks = queryClient.getQueryData<Task[]>(['tasks']);
-            if (previousTasks) {
-                queryClient.setQueryData(['tasks'], [...previousTasks, data]);
-            }
+        onSuccess: () => {
             resetEditedTask();
+            queryClient.invalidateQueries({ queryKey: ['tasks'] });
         },
         onError: (err: any) => {
             if (err.response?.data?.message) {
@@ -45,17 +42,9 @@ export const useMutateTask = () => {
             );
             return response.data;
         },
-        onSuccess: (data: TaskResponse) => {
-            const previousTasks = queryClient.getQueryData<Task[]>(['tasks']);
-            if (previousTasks) {
-                queryClient.setQueryData(
-                    ['tasks'],
-                    previousTasks.map((task) =>
-                        task.id === data.id ? data : task
-                    )
-                );
-            }
+        onSuccess: () => {
             resetEditedTask();
+            queryClient.invalidateQueries({ queryKey: ['tasks'] });
         },
         onError: (err: any) => {
             if (err.response?.data?.message) {
@@ -76,15 +65,9 @@ export const useMutateTask = () => {
             );
             return id;
         },
-        onSuccess: (id: number) => {
-            const previousTasks = queryClient.getQueryData<Task[]>(['tasks']);
-            if (previousTasks) {
-                queryClient.setQueryData(
-                    ['tasks'],
-                    previousTasks.filter((task) => task.id !== id)
-                );
-            }
+        onSuccess: () => {
             resetEditedTask();
+            queryClient.invalidateQueries({ queryKey: ['tasks'] });
         },
         onError: (err: any) => {
             if (err.response?.data?.message) {
