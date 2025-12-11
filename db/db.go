@@ -30,7 +30,15 @@ func NewDB() *gorm.DB {
 
 		// 環境変数が設定されているかチェック
 		if postgresUser == "" || postgresPw == "" || postgresHost == "" || postgresPort == "" || postgresDB == "" {
-			log.Fatal("Database connection configuration is missing. Please set DATABASE_URL or individual POSTGRES_* environment variables.")
+			log.Fatal(`Database connection configuration is missing.
+
+For Render deployment:
+1. Create a PostgreSQL database in Render dashboard
+2. Link the database to your web service
+3. DATABASE_URL will be automatically set
+
+For local development:
+Set POSTGRES_USER, POSTGRES_PW, POSTGRES_HOST, POSTGRES_PORT, and POSTGRES_DB environment variables.`)
 		}
 
 		url = fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
@@ -46,18 +54,18 @@ func NewDB() *gorm.DB {
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	
+
 	// 接続プールの設定
 	sqlDB, err := db.DB()
 	if err != nil {
 		log.Fatalf("Failed to get database instance: %v", err)
 	}
-	
+
 	// 接続タイムアウトを設定
 	sqlDB.SetConnMaxLifetime(time.Minute * 3)
 	sqlDB.SetMaxOpenConns(10)
 	sqlDB.SetMaxIdleConns(10)
-	
+
 	fmt.Println("Connected to database")
 	return db
 }
