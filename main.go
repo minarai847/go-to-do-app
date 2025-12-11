@@ -5,6 +5,7 @@ import (
 
 	"go-rest-api/controller"
 	"go-rest-api/db"
+	"go-rest-api/model"
 	"go-rest-api/repository"
 	"go-rest-api/router"
 	"go-rest-api/usecase"
@@ -12,11 +13,17 @@ import (
 )
 
 func main() {
-	db := db.NewDB()
+	database := db.NewDB()
+	
+	// データベースマイグレーションを実行
+	if err := database.AutoMigrate(&model.User{}, &model.Task{}); err != nil {
+		panic("Failed to migrate database: " + err.Error())
+	}
+	
 	userValidator := validator.NewUserValidator()
 	taskValidator := validator.NewTaskValidator()
-	userRepository := repository.NewUserRepository(db)
-	taskRepository := repository.NewTaskRepository(db)
+	userRepository := repository.NewUserRepository(database)
+	taskRepository := repository.NewTaskRepository(database)
 	userUsecase := usecase.NewUserUsecase(userRepository, userValidator)
 	taskUsecase := usecase.NewTaskUsecase(taskRepository, taskValidator)
 	userController := controller.NewUserController(userUsecase)
