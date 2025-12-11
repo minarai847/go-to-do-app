@@ -41,6 +41,12 @@ func NewRouter(uc controller.IUserController, tc controller.ITaskController) *ec
 			return c.Path() == "/signup" || c.Path() == "/login"
 		},
 	}))
+	// ヘルスチェックエンドポイント（Renderのデプロイ確認用）
+	e.GET("/health", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]string{
+			"status": "ok",
+		})
+	})
 	// 認証前のエンドポイント（signup, login, csrf）はCSRF保護の対象外（GETは自動的に許可される）
 	e.POST("/signup", uc.SignUp)
 	e.POST("/login", uc.Login)
