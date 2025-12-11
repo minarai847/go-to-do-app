@@ -8,7 +8,7 @@ import { useError } from './useError';
 export const useMutateAuth = () => {
     const navigate = useNavigate();
     const resetEditedTask = useStore((state) => state.resetEditedTask);
-    const { switchErrorHandling } = useError();
+    const { switchErrorHandling, getCsrfToken } = useError();
 
     const loginMutation = useMutation({
         mutationFn: async (user: Credentials) => {
@@ -19,7 +19,9 @@ export const useMutateAuth = () => {
             );
             return response.data;
         },
-        onSuccess: () => {
+        onSuccess: async () => {
+            // ログイン成功後にCSRFトークンを再取得
+            await getCsrfToken();
             navigate('/todo');
         },
         onError: (err: any) => {
@@ -42,7 +44,9 @@ export const useMutateAuth = () => {
             );
             return response.data;
         },
-        onSuccess: () => {
+        onSuccess: async () => {
+            // ログイン成功後にCSRFトークンを再取得
+            await getCsrfToken();
             navigate('/todo');
         },
         onError: (err: any) => {

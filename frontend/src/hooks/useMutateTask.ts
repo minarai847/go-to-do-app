@@ -6,15 +6,27 @@ import { useError } from './useError';
 
 export const useMutateTask = () => {
     const queryClient = useQueryClient();
-    const { switchErrorHandling } = useError();
+    const { switchErrorHandling, getCsrfToken } = useError();
     const resetEditedTask = useStore((state) => state.resetEditedTask);
+    
+    // CSRFトークンを取得してヘッダーに設定するヘルパー関数
+    const getCsrfTokenHeader = async () => {
+        const token = await getCsrfToken();
+        return token ? { 'X-CSRF-Token': token } : {};
+    };
 
     const createTaskMutation = useMutation({
         mutationFn: async (task: { title: string }) => {
+            const csrfHeader = await getCsrfTokenHeader();
             const response = await axios.post<TaskResponse>(
                 `${process.env.REACT_APP_API_URL}/tasks`,
                 task,
-                { withCredentials: true }
+                { 
+                    withCredentials: true,
+                    headers: {
+                        ...csrfHeader,
+                    }
+                }
             );
             return response.data;
         },
@@ -35,10 +47,16 @@ export const useMutateTask = () => {
 
     const updateTaskMutation = useMutation({
         mutationFn: async ({ id, title }: { id: number; title: string }) => {
+            const csrfHeader = await getCsrfTokenHeader();
             const response = await axios.put<TaskResponse>(
                 `${process.env.REACT_APP_API_URL}/tasks/${id}`,
                 { title },
-                { withCredentials: true }
+                { 
+                    withCredentials: true,
+                    headers: {
+                        ...csrfHeader,
+                    }
+                }
             );
             return response.data;
         },
@@ -59,9 +77,15 @@ export const useMutateTask = () => {
 
     const deleteTaskMutation = useMutation({
         mutationFn: async (id: number) => {
+            const csrfHeader = await getCsrfTokenHeader();
             await axios.delete(
                 `${process.env.REACT_APP_API_URL}/tasks/${id}`,
-                { withCredentials: true }
+                { 
+                    withCredentials: true,
+                    headers: {
+                        ...csrfHeader,
+                    }
+                }
             );
             return id;
         },

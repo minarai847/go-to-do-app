@@ -8,8 +8,17 @@ export const useError = () => {
     const navigate = useNavigate();
     const resetEditedTask = useStore((state) => state.resetEditedTask);
     const getCsrfToken = async () => {
-        const { data } = await axios.get<CsrfToken>(`${process.env.REACT_APP_API_URL}/csrf`);
-        axios.defaults.headers.common['X-CSRF-Token'] = data.csrf_token;
+        try {
+            const { data } = await axios.get<CsrfToken>(
+                `${process.env.REACT_APP_API_URL}/csrf`,
+                { withCredentials: true }
+            );
+            axios.defaults.headers.common['X-CSRF-Token'] = data.csrf_token;
+            return data.csrf_token;
+        } catch (error) {
+            console.error('Failed to get CSRF token:', error);
+            return null;
+        }
     }
     const switchErrorHandling = (msg: string | any) => {
         // オブジェクトの場合は文字列に変換
@@ -57,5 +66,5 @@ export const useError = () => {
                 alert(errorMessage);
         }
     }
-    return { switchErrorHandling }
+    return { switchErrorHandling, getCsrfToken }
 }
