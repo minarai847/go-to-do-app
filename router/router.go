@@ -12,8 +12,19 @@ import (
 
 func NewRouter(uc controller.IUserController, tc controller.ITaskController) *echo.Echo {
 	e := echo.New()
+	// CORS設定: ローカル開発環境と本番環境のURLを許可
+	allowedOrigins := []string{
+		"http://localhost:3000",
+		"http://localhost:3001",
+		"https://go-to-do-app.vercel.app", // VercelのフロントエンドURL
+	}
+	// 環境変数から追加のURLを取得
+	if feURL := os.Getenv("FE_URL"); feURL != "" {
+		allowedOrigins = append(allowedOrigins, feURL)
+	}
+
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:3001", os.Getenv("FE_URL")},
+		AllowOrigins:     allowedOrigins,
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAccessControlAllowHeaders, echo.HeaderXCSRFToken},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
 		AllowCredentials: true,
